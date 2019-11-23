@@ -13,6 +13,7 @@
         {
             // print_r($this->getUrl());
             $url = $this->getUrl();
+            
            
 
             // Look in controllers for first value
@@ -42,12 +43,13 @@
                    
                 }
 
-                 // get params
+                
+                    // Get params
+        $this->params = $url ? array_values($url) : [];
 
-                 $this->params = array_values($url)??[];
-
-                 // Call a calback with array fo params
-                 call_user_func_array([$this->currentContrller,$this->currentMethod],$this->params);
+        // Call a callback with array of params
+        call_user_func_array([$this->currentContrller, $this->currentMethod], $this->params);
+                 
 
                 
 
