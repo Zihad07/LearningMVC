@@ -3,11 +3,16 @@
     class Pages extends Controller {
         function __construct()
         {
+            
            
         }
 
         public function index(){
-            $data = ['title'=> 'WelCome'];
+          
+            $data = [
+                'title'=> 'WelCome',
+               
+            ];
             $this->view('pages/index',$data);
         }
 
