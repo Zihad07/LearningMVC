@@ -2,7 +2,7 @@
     class Users extends Controller{
         public function __construct()
         {
-            
+            $this->userModel = $this->model('User');
         }
 
         public function register(){
@@ -28,6 +28,10 @@
                 // Validate Email
                 if(empty($data['email'])){
                     $data['email_err'] = 'Please enter email';
+                }else{
+                    if($this->userModel->findUserByEmail($data['email'])){
+                        $data['email_err'] = 'Email is already taken';
+                    }
                 }
                 // Validate Name
                 if(empty($data['name'])){
@@ -51,7 +55,19 @@
                 // make sure error are empty
                 if(empty($data['email_err']) && empty($data['name_err']) && empty($data['password_err']) && empty($data['confirm_password_err'])){
                     // Validated
-                    die('Success');
+                    
+                    // Hash Passord
+                    $data['password'] = password_hash($data['password'],PASSWORD_DEFAULT);
+
+                    if($this->userModel->register($data)){
+                        
+                        // session flash message
+                        flash('register_success','You are register and can log in');
+                        // Redirect
+                        redirect("users/login");
+                    }else{
+                        die("Something went wrong");
+                    }
                    
                 }else{
                     // Load view with errors
@@ -94,6 +110,8 @@
                 // Validate Email
                 if(empty($data['email'])){
                     $data['email_err'] = 'Please enter email';
+                }elseif(!$this->userModel->findUserByEmail($data['email'])){
+                    $data['email_err'] = 'No user found';
                 }
               
                 // Validate Password
@@ -105,7 +123,29 @@
                 // make sure error are empty
                 if(empty($data['email_err']) && empty($data['password_err'])){
                     // Validated
-                    die('Success');
+                    // die('Success');
+
+                    // Check and set logged in user
+                    $loggedInUser = $this->userModel->login($data['email'], $data['password']);
+
+                    if($loggedInUser){
+                       
+                        // echo "<pre>";
+                        // print_r($loggedInUser);
+                        // echo "</pre>";
+                        // die("Successfully login");
+
+                         // Create Session
+
+                         $this->createUserSession($loggedInUser);
+
+
+                    }else{
+                        $data['password_err'] = "Password incorrect";
+                    
+                        // reload login page with error
+                        $this->view('users/login',$data);
+                    }
                    
                 }else{
                     // Load view with errors
@@ -122,6 +162,31 @@
 
                 // Load View
                 $this->view('users/login',$data);
+            }
+        }
+
+        public function createUserSession($user){
+            $_SESSION['user_id'] = $user->id;
+            $_SESSION['user_name'] = $user->name;
+            $_SESSION['user_email'] = $user->email;
+
+            redirect('pages/index');
+        }
+        public function logout(){
+            // User session unset and destroy
+            unset($_SESSION['user_name']);
+            unset($_SESSION['user_id']);
+            unset($_SESSION['user_email']);
+            session_destroy();
+
+            redirect('users/login');
+        }
+
+        public function isLoggedIn(){
+            if(isset($_SESSION['user_id'])){
+                return true;
+            }else{
+                return false;
             }
         }
     }
